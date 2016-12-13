@@ -1,0 +1,85 @@
+<HTML>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+attribute  vec2 vTextureCoord;
+attribute vec4 vNormal;
+varying vec2 fTextureCoord;
+
+
+uniform mat4 projection;
+uniform mat4 view;
+
+varying float falloff;
+
+void
+main()
+{
+	gl_PointSize = 1.0;
+   
+   mat3 nM = mat3(view[0][0], view[0][1], view[0][2],
+                  view[1][0], view[1][1], view[1][2],
+                  view[2][0], view[2][1], view[2][2]);
+                    
+   vec3 N = normalize(nM * vNormal.xyz);                 
+   
+   
+   vec3 viewTransformed = (view*vPosition).xyz;
+	vec3 eye = normalize(vec3(0.0, 0.0, 1.0)-viewTransformed).xyz;
+   
+   float shape_falloff = pow(max(0.0, dot(eye, vec3(0.0, 0.0, 1.0))),60.0)*5.0;
+   float distance_falloff = max(0.0, (1.0/distance(vec3(0.0, 0.0, 0.0), viewTransformed)))*10.0;
+   float lambertian_falloff = max(0.0, dot(N, eye));
+   falloff = shape_falloff*distance_falloff*lambertian_falloff;
+   //falloff = pow(max(0.0, dot(eye,vec3(0, 0, -1))),20.0);
+   
+   gl_Position = projection * view * vPosition;
+   fTextureCoord = vTextureCoord;
+   
+
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+
+varying  vec2 fTextureCoord;
+uniform sampler2D texture;
+varying float falloff;
+
+
+void
+main()
+{
+     vec4 texColor = texture2D(texture, fTextureCoord); 
+     gl_FragColor = vec4(texColor.rgb*falloff, 1.0); 
+
+}
+</script>
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="initShaders.js"></script>
+<script type="text/javascript" src="MV.js"></script>
+<script type="text/javascript" src="webgl-obj-loader.js"></script>
+<script type="text/javascript" src="plasma.js"></script>
+<script type="text/javascript" src="code.js"></script>
+</head>
+
+<body>
+<p id="d">a</p><br>
+<canvas id="gl-canvas" width="1024" height="768">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<br>
+<input id="startstop" type="button" value="Toggle Animation">
+<br>
+Y-Field of View: 10 <input id="fov"  type="range" min="10" max="180" step="0.01"
+value="60" width=200/> 180 
+
+
+
+
+
+</body>
+
+</HTML>
